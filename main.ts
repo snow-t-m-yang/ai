@@ -18,8 +18,11 @@ const filename = rawFilename.endsWith(".mp3")
   : `${rawFilename}.mp3`;
 const text = await rl.question("Text to synthesize: ");
 rl.close();
+const textLength = text.length;
+console.warn(`Text length: ${textLength}`);
 
-let synthesizer = new sdk.SpeechSynthesizer(speechConfig);
+const synthesizer = new sdk.SpeechSynthesizer(speechConfig);
+
 function synthToFile(text: string, filename: string): Promise<void> {
   return new Promise((resolve, reject) => {
     synthesizer.speakTextAsync(
@@ -32,15 +35,12 @@ function synthToFile(text: string, filename: string): Promise<void> {
         } else {
           reject(new Error("Synthesis failed: " + result.errorDetails));
         }
-        console.log("Done");
         synthesizer.close();
-        synthesizer = undefined!;
       },
       (err) => {
         reject(err);
         console.error("Error: ", err);
         synthesizer.close();
-        synthesizer = undefined!;
       },
     );
   });
