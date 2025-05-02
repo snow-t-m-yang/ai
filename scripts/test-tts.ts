@@ -1,4 +1,4 @@
-import { bufferToMp3 } from "../utils/bufferToMp3.ts";
+import { bufferToMp3 } from "../utils/buffer-to-mp3.ts";
 
 // 1. call the API
 const res = await fetch("http://localhost:8000/api/synthesizer/v0", {
