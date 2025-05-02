@@ -18,3 +18,7 @@ bin-release/
 # information for Eclipse / Flash Builder.
 
 .env
+
+*.mp3
+
+.DS_Store
