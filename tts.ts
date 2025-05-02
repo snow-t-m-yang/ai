@@ -13,7 +13,6 @@ function initSynthesizer() {
   return new sdk.SpeechSynthesizer(speechConfig);
 }
 
-
 function synthToFile(text: string, filename: string): Promise<void> {
   const synthesizer = initSynthesizer();
 

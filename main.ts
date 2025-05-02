@@ -19,10 +19,11 @@ app.post("/api/synthesizer/v0", async (c) => {
   console.warn(`Text length: ${textLength}`);
 
   const rawBuffer = await synthToBuffer(text);
-  const byteArray = Array.from(new Uint8Array(rawBuffer));
+  const uint8Array = new Uint8Array(rawBuffer);
 
-  return c.json({
-    buffer: byteArray,
+  return c.body(uint8Array, 200, {
+    "Content-Type": "audio/mpeg",
+    "Content-Length": uint8Array.byteLength.toString(),
   });
 });
 
