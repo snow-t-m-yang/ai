@@ -1,51 +1,27 @@
-import "jsr:@std/dotenv/load";
-import * as sdk from "microsoft-cognitiveservices-speech-sdk";
-import * as readline from "node:readline/promises";
-import { stdin as input, stdout as output } from "node:process";
+import { Hono } from "jsr:@hono/hono";
+import { synthToBuffer } from "./tts.ts";
 
-const key = Deno.env.get("SPEECH_KEY")!;
-const region = Deno.env.get("SPEECH_REGION")!;
-const speechConfig = sdk.SpeechConfig.fromSubscription(key, region);
-speechConfig.speechSynthesisVoiceName = "zh-CN-XiaoxiaoMultilingualNeural";
-speechConfig.speechSynthesisOutputFormat =
-  sdk.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+const app = new Hono();
 
-const rl = readline.createInterface({ input, output });
+app.post('/api/synthesizer/v0', async (c) => {
+  const { text } = await c.req.json();
+  if (!text) {
+    return c.json({ error: 'Text and filename are required' }, 400);
+  }
 
-const rawFilename = await rl.question("Output file name (without extension): ");
-const filename = rawFilename.endsWith(".mp3")
-  ? rawFilename
-  : `${rawFilename}.mp3`;
-const text = await rl.question("Text to synthesize: ");
-rl.close();
-const textLength = text.length;
-console.warn(`Text length: ${textLength}`);
+  if (typeof text !== 'string') {
+    return c.json({ error: 'Text and filename must be strings' }, 400);
+  }
 
-const synthesizer = new sdk.SpeechSynthesizer(speechConfig);
+  const textLength = text.length;
 
-function synthToFile(text: string, filename: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    synthesizer.speakTextAsync(
-      text,
-      async (result) => {
-        if (result.reason === sdk.ResultReason.SynthesizingAudioCompleted) {
-          await Deno.writeFile(filename, new Uint8Array(result.audioData));
-          console.log("Saved:", filename);
-          resolve();
-        } else {
-          reject(new Error("Synthesis failed: " + result.errorDetails));
-        }
-        synthesizer.close();
-      },
-      (err) => {
-        reject(err);
-        console.error("Error: ", err);
-        synthesizer.close();
-      },
-    );
+  console.warn(`Text length: ${textLength}`);
+
+  const buffer = await synthToBuffer(text)
+
+  return c.json({
+    buffer,
   });
-}
+})
 
-await synthToFile(text, filename);
-// ensure Deno process exits once synthesis is done
-Deno.exit(0);
+Deno.serve(app.fetch) 
